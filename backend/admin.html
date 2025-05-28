@@ -1,0 +1,67 @@
+<script>
+const API_URL = "https://umanity-backend.onrender.com";
+
+Promise.all([
+  fetch(`${API_URL}/admin/participants`).then(r => r.json()),
+  fetch(`${API_URL}/admin/newsletter`).then(r => r.json()),
+  fetch(`${API_URL}/admin/stats`).then(r => r.json())
+])
+
+    // === PARTICIPANTS ===
+    const partDiv = document.getElementById('participantsList');
+    if (participants.length === 0) {
+      partDiv.textContent = "Aucune participation enregistrée.";
+    } else {
+      let html = '<table><tr><th>Nom</th><th>Prénom</th><th>Pays</th><th>Cause</th><th>Date</th></tr>';
+      participants.forEach(p => {
+        html += `<tr>
+          <td>${p.nom}</td>
+          <td>${p.prenom}</td>
+          <td>${p.pays}</td>
+          <td><span class="badge">${p.cause}</span></td>
+          <td>${new Date(p.timestamp).toLocaleString()}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      partDiv.innerHTML = html;
+    }
+
+    // === NEWSLETTER ===
+    const mailDiv = document.getElementById('newsletterList');
+    if (newsletter.length === 0) {
+      mailDiv.textContent = "Aucun email inscrit.";
+    } else {
+      let html = '<ul>';
+      newsletter.forEach(e => {
+        html += `<li>${e.email} <small>(${new Date(e.timestamp).toLocaleString()})</small></li>`;
+      });
+      html += '</ul>';
+      mailDiv.innerHTML = html;
+    }
+
+    // === STATS ===
+    const statDiv = document.getElementById('statsContent');
+    if (!stats || Object.keys(stats).length === 0) {
+      statDiv.textContent = "Aucune statistique enregistrée.";
+    } else {
+      const { causeCount, countryMap, updatedAt } = stats;
+      let html = `<p><strong>Dernière mise à jour :</strong> ${new Date(updatedAt).toLocaleString()}</p>`;
+      html += '<h4>Causes</h4><ul>';
+      for (const [cause, count] of Object.entries(causeCount)) {
+        html += `<li><strong>${cause}</strong> : ${count}</li>`;
+      }
+      html += '</ul><h4>Pays</h4><ul>';
+      for (const [country, causes] of Object.entries(countryMap)) {
+        const details = Object.entries(causes).map(([c, n]) => `${c} (${n})`).join(', ');
+        html += `<li><strong>${country}</strong> → ${details}</li>`;
+      }
+      html += '</ul>';
+      statDiv.innerHTML = html;
+    }
+
+  })
+  .catch(err => {
+    document.body.innerHTML = `<p style="color:red;">Erreur de chargement : ${err}</p>`;
+  });
+</script>
+
