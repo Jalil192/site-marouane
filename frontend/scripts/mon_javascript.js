@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     education: "purple",
   };
 
+  // Formulaire principal
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(form).entries());
@@ -25,25 +26,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!data.cause || !data.pays) return;
 
     try {
-      // Envoi backend
-      const response = await fetch(/api/illumine", {
+      // ✅ Envoi vers backend
+      const response = await fetch("https://umanity-backend.onrender.com/api/illumine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-      // Enregistrement stats côté backend (état partagé)
+      // 🔄 Stats actuelles
       const statsRes = await fetch("https://umanity-backend.onrender.com/api/get-stats");
-      if (!statsRes.ok) {
-        throw new Error(`HTTP error! status: ${statsRes.status}`);
-      }
+      if (!statsRes.ok) throw new Error(`HTTP error! status: ${statsRes.status}`);
 
       const stats = await statsRes.json();
-
       const causeCount = stats.causeCount || {};
       const countryMap = stats.countryMap || {};
 
@@ -52,15 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!countryMap[data.pays][data.cause]) countryMap[data.pays][data.cause] = 0;
       countryMap[data.pays][data.cause]++;
 
+      // 💾 Mise à jour stats
       const saveStatsRes = await fetch("https://umanity-backend.onrender.com/api/stats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ causeCount, countryMap }),
       });
 
-      if (!saveStatsRes.ok) {
-        throw new Error(`HTTP error! status: ${saveStatsRes.status}`);
-      }
+      if (!saveStatsRes.ok) throw new Error(`HTTP error! status: ${saveStatsRes.status}`);
 
       renderStats(statsContainer, causeCount, countryMap);
       statsContainer.style.display = "block";
@@ -71,10 +66,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       form.reset();
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   });
 
+  // Newsletter
   newsletterForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = newsletterForm.newsletterEmail.value.trim();
@@ -87,9 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ email }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       newsletterMessage.textContent = `Merci ! Ton inscription à UmanitY est bien enregistrée : ${email}`;
       newsletterMessage.classList.remove("d-none");
@@ -100,10 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       newsletterForm.reset();
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   });
 
+  // Rendu HTML des stats
   function renderStats(container, causes, countries) {
     let html = `
       <div class="cause-stats">
@@ -138,5 +133,15 @@ document.addEventListener("DOMContentLoaded", () => {
   function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
+
+  // 📱 Fermeture du menu navbar mobile après clic
+  document.querySelectorAll(".navbar-nav .nav-link").forEach(link => {
+    link.addEventListener("click", () => {
+      const navbarCollapse = document.querySelector(".navbar-collapse");
+      if (navbarCollapse.classList.contains("show")) {
+        new bootstrap.Collapse(navbarCollapse).toggle();
+      }
+    });
+  });
 });
 
