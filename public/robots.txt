@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://umanity.vercel.app/sitemap.xml

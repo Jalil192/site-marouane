@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - UmanitY</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #f0f0f0;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #6c63ff;
+    }
+    section {
+      margin-bottom: 2rem;
+      border: 1px solid #333;
+      padding: 1rem;
+      border-radius: 8px;
+      background-color: #222;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #555;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th {
+      background-color: #333;
+    }
+    .badge {
+      background-color: #6c63ff;
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Interface Admin – UmanitY</h1>
+
+  <section id="participants">
+    <h2>📄 Participations</h2>
+    <div id="participantsList">Chargement...</div>
+  </section>
+
+  <section id="newsletter">
+    <h2>📧 Emails newsletter</h2>
+    <div id="newsletterList">Chargement...</div>
+  </section>
+
+  <section id="stats">
+    <h2>📊 Statistiques</h2>
+    <div id="statsContent">Chargement...</div>
+  </section>
+
+  <script>
+    fetch('/admin/data')
+      .then(res => res.json())
+      .then(data => {
+        // === Participations ===
+        const partDiv = document.getElementById('participantsList');
+        if (!data.participants.length) {
+          partDiv.textContent = "Aucune participation enregistrée.";
+        } else {
+          let html = '<table><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Pays</th><th>Cause</th><th>Date</th></tr>';
+          data.participants.forEach(p => {
+            html += `<tr>
+              <td>${p.nom}</td>
+              <td>${p.prenom}</td>
+              <td>${p.email}</td>
+              <td>${p.pays}</td>
+              <td><span class="badge">${p.cause}</span></td>
+              <td>${new Date(p.timestamp).toLocaleString()}</td>
+            </tr>`;
+          });
+          html += '</table>';
+          partDiv.innerHTML = html;
+        }
+
+        // === Newsletter ===
+        const mailDiv = document.getElementById('newsletterList');
+        if (!data.newsletter.length) {
+          mailDiv.textContent = "Aucun email inscrit.";
+        } else {
+          let html = '<ul>';
+          data.newsletter.forEach(e => {
+            html += `<li>${e.email} <small>(${new Date(e.timestamp).toLocaleString()})</small></li>`;
+          });
+          html += '</ul>';
+          mailDiv.innerHTML = html;
+        }
+
+        // === Stats ===
+        const statDiv = document.getElementById('statsContent');
+        if (!data.stats || Object.keys(data.stats).length === 0) {
+          statDiv.textContent = "Aucune statistique enregistrée.";
+        } else {
+          const { causeCount, countryMap, updatedAt } = data.stats;
+          let html = `<p><strong>Dernière mise à jour :</strong> ${new Date(updatedAt).toLocaleString()}</p>`;
+          html += '<h4>Causes</h4><ul>';
+          for (const [cause, count] of Object.entries(causeCount)) {
+            html += `<li><strong>${cause}</strong> : ${count}</li>`;
+          }
+          html += '</ul><h4>Pays</h4><ul>';
+          for (const [country, causes] of Object.entries(countryMap)) {
+            const details = Object.entries(causes).map(([c, n]) => `${c} (${n})`).join(', ');
+            html += `<li><strong>${country}</strong> → ${details}</li>`;
+          }
+          html += '</ul>';
+          statDiv.innerHTML = html;
+        }
+      })
+      .catch(err => {
+        document.body.innerHTML = `<p style="color:red;">Erreur de chargement : ${err}</p>`;
+      });
+  </script>
+
+</body>
+</html>
+
